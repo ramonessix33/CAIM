@@ -6,7 +6,7 @@ import csv
 import math
 
 def f (rank, c, b, a):
-    return c / (rank+b)**a
+    return c / ((rank+b)**a)
 
 line_count = 0
 x = []
@@ -21,19 +21,18 @@ with open('news.csv') as csv_file:
                 b = False
             else:
                 line_count += 1
-                x.append(math.log(line_count))
-                y.append(math.log(int(row[0])))
+                x.append(line_count)
+                y.append(int(row[0]))
 
-x.reverse()
 y.reverse()
-print(y)
+
 params, covs = curve_fit(f, x, y) 
 print("params: ", params) 
 c, b, a = params[0], params[1], params[2]
-yfit = c / (x+b)**a
+yfit = c / ((x+b)**a)
 
-plt.xscale("log")
-plt.yscale("log")
+#plt.xscale("log")
+#plt.yscale("log")
 plt.plot(x, y, 'bo', label="y-original")
 plt.plot(x, yfit, label="yfit")
 plt.xlabel('x')
