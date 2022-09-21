@@ -14,7 +14,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 from elasticsearch.exceptions import NotFoundError, TransportError
 import matplotlib.pyplot as plt
-import enchant
+#import enchant
 
 
 import argparse
@@ -48,12 +48,12 @@ if __name__ == '__main__':
                         if (not t.isalpha()) :
                             cNum += 1
                             continue
-                        if t in stopwords:
-                            cStopWords += 1
-                            continue
-                        if not d.check(t):
-                            cSpellCheck += 1
-                            continue
+                        #if t in stopwords:
+                        #    cStopWords += 1
+                        #    continue
+                        #if not d.check(t):
+                        #    cSpellCheck += 1
+                        #    continue
 
                         if t in voc:
                             voc[t] += tv['term_vectors']['text']['terms'][t]['term_freq']
@@ -66,8 +66,6 @@ if __name__ == '__main__':
 
         for v in voc:
             lpal.append((v.encode("utf-8", "ignore"), voc[v]))
-
-
 
         for pal, cnt in sorted(lpal, key=lambda x: x[0 if args.alpha else 1]):
             print(f'{cnt}, {pal.decode("utf-8")}')

@@ -3,7 +3,6 @@ from numpy import array, exp
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt 
 import csv
-import math
 
 
 def f (rank, a, b, c):
