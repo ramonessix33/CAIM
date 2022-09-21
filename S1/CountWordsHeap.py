@@ -5,7 +5,6 @@ CountWords
 :Description: CountWords
     Generates a list with the counts and the words in the 'text' field of the documents in an index
 :Authors: bejar
-
 :Version:
 :Created on: 04/07/2017 11:58
 """
@@ -14,7 +13,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
 from elasticsearch.exceptions import NotFoundError, TransportError
 import matplotlib.pyplot as plt
-import enchant
+from scipy.optimize import curve_fit
 
 
 import argparse
@@ -22,57 +21,62 @@ import argparse
 __author__ = 'bejar'
 maxNum = 500
 
+
+def f (x, k, b):
+    return k*(x**b)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--index', default=None, required=True, help='Index to search')
     parser.add_argument('--alpha', action='store_true', default=False, help='Sort words alphabetically')
     args = parser.parse_args()
 
-    index = args.index
-
-    d = enchant.Dict("en_US")
-
-
-    stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now']
-
-    try:
-        diffWords = 0
-        paraulesTotals = 0
-        b = False
-        client = Elasticsearch(timeout=1000)
-        voc = {}
-        sc = scan(client, index=index, query={"query" : {"match_all": {}}})
-        for s in sc:
-            try:
-                tv = client.termvectors(index=index, id=s['_id'], fields=['text'])
-                if 'text' in tv['term_vectors']:
-                    for t in tv['term_vectors']['text']['terms']:
-                        if (not t.isalpha()) :
-                            continue
-                        paraulesTotals += 1
-                        if t in voc:
-                            voc[t] += tv['term_vectors']['text']['terms'][t]['term_freq']
-                        else:
-                            diffWords += 1
-                            voc[t] = tv['term_vectors']['text']['terms'][t]['term_freq']
-            except TransportError:
-                pass
-            if b:
-                break
-        lpal = []
-
-        for v in voc:
-            lpal.append((v.encode("utf-8", "ignore"), voc[v]))
+    x = []
+    y = []
+    for i in [1, 5, 10, 15, 20, 25, 30]:
+        index = "novels"+str(i)
+        try:
+            diffWords = 0
+            paraulesTotals = 0
+            b = False
+            client = Elasticsearch(timeout=1000)
+            voc = {}
+            sc = scan(client, index=index, query={"query" : {"match_all": {}}})
+            for s in sc:
+                try:
+                    tv = client.termvectors(index=index, id=s['_id'], fields=['text'])
+                    if 'text' in tv['term_vectors']:
+                        for t in tv['term_vectors']['text']['terms']:
+                            if (not t.isalpha()) :
+                                continue
+                            paraulesTotals += 1
+                            if t in voc:
+                                voc[t] += tv['term_vectors']['text']['terms'][t]['term_freq']
+                            else:
+                                diffWords += 1
+                                voc[t] = tv['term_vectors']['text']['terms'][t]['term_freq']
+                except TransportError:
+                    pass
+                if b:
+                    break
+            x.append(paraulesTotals)
+            y.append(diffWords)
+            print("Paraules Totals :" + str(paraulesTotals) + " Paraules Diferentes: " + str(diffWords))
+        except NotFoundError:
+            print(f'Index {index} does not exists')
 
 
+    params, covs = curve_fit(f, x, y)
+    print("params: ", params)
+    k, b = params[0], params[1]
+    yfit = k*(x**b)
 
-        #for pal, cnt in sorted(lpal, key=lambda x: x[0 if args.alpha else 1]):
-            #print(f'{cnt}, {pal.decode("utf-8")}')
-
-        print('--------------------')
-        print(f'{len(lpal)} Words = ' + str(paraulesTotals))
-        print('############################################')
-        print('Paraules diferents ' + str(diffWords))
-
-    except NotFoundError:
-        print(f'Index {index} does not exists')
+    #plt.xscale("log")
+    #plt.yscale("log")
+    plt.plot(x, y, 'bo', label="y-original")
+    plt.plot(x, yfit, label="yfit")
+    plt.xlabel('Paraules Totals')
+    plt.ylabel('Paraules Diferentes')
+    plt.legend(loc='best', fancybox=True, shadow=True)
+    plt.grid(True)
+    plt.show()
