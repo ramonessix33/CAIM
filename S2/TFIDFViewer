@@ -70,31 +70,30 @@ def document_term_vector(client, index, id):
         	file_df[t] = termvector['term_vectors']['text']['terms'][t]['doc_freq']
 	return sorted(file_td.items()), sorted(file_df.items())
 
-
 def toTFIDF(client, index, file_id):
-	"""
-	Returns the term weights of a document
+    """
+    Returns the term weights of a document
 
-	:param file:
-	:return:
-	"""
+    :param file:
+    :return:
+    """
 
-	# Get the frequency of the term in the document, and the number of documents
-	# that contain the term
-	file_tv, file_df = document_term_vector(client, index, file_id)
+    # Get the frequency of the term in the document, and the number of documents
+    # that contain the term
+    file_tv, file_df = document_term_vector(client, index, file_id)
 
-	max_freq = max([f for _, f in file_tv])
+    max_freq = max([f for _, f in file_tv])
 
-	dcount = doc_count(client, index)
+    dcount = doc_count(client, index)
 
-	tfidfw = []
-	for (t, w),(_, df) in zip(file_tv, file_df):
-    	#
+    tfidfw = []
+    for (t, w),(_, df) in zip(file_tv, file_df):
+        tf = w/max_freq
+        idf = np.log2(dcount / df)
+        tfidfw.add((t,tf*idf))
+        pass
 
-    	#
-    	pass
-
-	return normalize(tfidfw)
+    return normalize(tfidfw)
 
 def print_term_weigth_vector(twv):
 	"""
