@@ -42,9 +42,9 @@ def search_file_by_path(client, index, path):
 
 	lfiles = [r for r in result]
 	if len(lfiles) == 0:
-    	raise NameError(f'File [{path}] not found')
+		raise NameError(f'File [{path}] not found')
 	else:
-    	return lfiles[0].meta.id
+		return lfiles[0].meta.id
 
 
 def document_term_vector(client, index, id):
@@ -65,10 +65,10 @@ def document_term_vector(client, index, id):
 	file_df = {}
 
 	if 'text' in termvector['term_vectors']:
-    	for t in termvector['term_vectors']['text']['terms']:
-        	file_td[t] = termvector['term_vectors']['text']['terms'][t]['term_freq']
-        	file_df[t] = termvector['term_vectors']['text']['terms'][t]['doc_freq']
-	return sorted(file_td.items()), sorted(file_df.items())
+		for t in termvector['term_vectors']['text']['terms']:
+			file_td[t] = termvector['term_vectors']['text']['terms'][t]['term_freq']
+			file_df[t] = termvector['term_vectors']['text']['terms'][t]['doc_freq']
+		return sorted(file_td.items()), sorted(file_df.items())
 
 def toTFIDF(client, index, file_id):
     """
@@ -103,7 +103,7 @@ def print_term_weigth_vector(twv):
 	"""
 	#
 	for t in twv:
-    	print(str(t[0]) + str(t[1]))
+    		print(str(t[0]) + str(t[1]))
 	#
 	pass
 
@@ -118,7 +118,7 @@ def normalize(tw):
 	#
 	s = 0
 	for t in tw:
-    	s+= t*t
+    		s+= t*t
 	#
 	s = np.sqrt(s)
 	tw2 = tw/s
@@ -135,7 +135,7 @@ def cosine_similarity(tw1, tw2):
 	#
 	s = 0
 	for t1,t2 in zip(tw1, tw2):
-    	s+= t1*t2
+    		s+= t1*t2
 	#
 	return s
 
@@ -169,25 +169,23 @@ if __name__ == '__main__':
 	try:
 
     	# Get the files ids
-    	file1_id = search_file_by_path(client, index, file1)
-    	file2_id = search_file_by_path(client, index, file2)
+    		file1_id = search_file_by_path(client, index, file1)
+    		file2_id = search_file_by_path(client, index, file2)
 
     	# Compute the TF-IDF vectors
-    	file1_tw = toTFIDF(client, index, file1_id)
-    	file2_tw = toTFIDF(client, index, file2_id)
+    		file1_tw = toTFIDF(client, index, file1_id)
+    		file2_tw = toTFIDF(client, index, file2_id)
 
-    	if args.print:
-        	print(f'TFIDF FILE {file1}')
-        	print_term_weigth_vector(file1_tw)
-        	print ('---------------------')
-        	print(f'TFIDF FILE {file2}')
-        	print_term_weigth_vector(file2_tw)
-        	print ('---------------------')
+    		if args.print:
+    		    	print(f'TFIDF FILE {file1}')
+    		    	print_term_weigth_vector(file1_tw)
+    		    	print ('---------------------')
+    		    	print(f'TFIDF FILE {file2}')
+    		    	print_term_weigth_vector(file2_tw)
+    		    	print ('---------------------')
 
-    	print(f"Similarity = {cosine_similarity(file1_tw, file2_tw):3.5f}")
+    		print(f"Similarity = {cosine_similarity(file1_tw, file2_tw):3.5f}")
 
 	except NotFoundError:
-    	print(f'Index {index} does not exists')
-
-
+    		print(f'Index {index} does not exists')
 
