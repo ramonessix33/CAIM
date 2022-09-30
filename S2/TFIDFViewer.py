@@ -90,9 +90,9 @@ def toTFIDF(client, index, file_id):
     for (t, w),(_, df) in zip(file_tv, file_df):
         tf = w/max_freq
         idf = np.log2(dcount / df)
-        tfidfw.add((t,tf*idf))
+        tfidfw.append(tf*idf)
         pass
-
+    
     return normalize(tfidfw)
 
 def print_term_weigth_vector(twv):
@@ -102,8 +102,9 @@ def print_term_weigth_vector(twv):
 	:return:
 	"""
 	#
-	for t in twv:
-    		print(str(t[0]) + str(t[1]))
+    for t in twv:
+        print(t)
+        print(t[0] + str(t[1]))
 	#
 	pass
 
@@ -118,7 +119,7 @@ def normalize(tw):
 	#
 	s = 0
 	for t in tw:
-    		s+= t*t
+		s+=t*t
 	#
 	s = np.sqrt(s)
 	tw2 = tw/s
