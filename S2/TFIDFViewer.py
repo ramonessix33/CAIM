@@ -87,13 +87,15 @@ def toTFIDF(client, index, file_id):
     dcount = doc_count(client, index)
 
     tfidfw = []
+    tokens = []
     for (t, w),(_, df) in zip(file_tv, file_df):
         tf = w/max_freq
         idf = np.log2(dcount / df)
         tfidfw.append((tf*idf))
+        tokens.append(t)
         pass
 
-    return normalize(tfidfw)
+    return list(zip(tokens, normalize(tfidfw)))
 
 def print_term_weigth_vector(twv):
     """
@@ -134,9 +136,17 @@ def cosine_similarity(tw1, tw2):
     """
     #
     s = 0
-    for t1,t2 in zip(tw1, tw2):
-        s+= t1*t2
-    #
+    sizetw1, sizetw2 = (len(list(tw1)), len(list(tw2)))
+    indextw1, indextw2 = (0, 0)
+    while indextw1 < sizetw1 and indextw2 < sizetw2:
+        if tw1[indextw1][0] == tw2[indextw2][0]:
+            s += tw1[indextw1][1] * tw2[indextw2][1]
+            indextw1 += 1
+            indextw2 += 1
+        elif tw1[indextw1][0] > tw2[indextw2][0]:
+            indextw2 += 1
+        else:
+            indextw1 += 1
     return s
 
 def doc_count(client, index):
