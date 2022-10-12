@@ -146,7 +146,6 @@ def doc_count(client, index):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--index', default=None, help='Index to search')
-    parser.add_argument('--nhits', default=10, type=int, help='Number of hits to return')
     parser.add_argument('--query', default=None, nargs=argparse.REMAINDER, help='List of words to search')
 
     args = parser.parse_args()
@@ -154,8 +153,8 @@ if __name__ == '__main__':
     index = args.index
     query = args.query
     print(query)
-    nhits = args.nhits
-    nrounds =5
+    nhits = 5
+    nrounds = 5
 
     try:
         client = Elasticsearch()
@@ -168,11 +167,12 @@ if __name__ == '__main__':
 
                 s = s.query(q)
                 response = s[0:nhits].execute()
-                for r in response:  # only returns a specific number of results
-                    print(f'ID= {r.meta.id} SCORE={r.meta.score}')
-                    print(f'PATH= {r.path}')
-                    print(f'TEXT: {r.text[:50]}')
-                    print('-----------------------------------------------------------------')
+                query = rocchio(response, index)
+        for r in response:  # only returns a specific number of results
+            print(f'ID= {r.meta.id} SCORE={r.meta.score}')
+            print(f'PATH= {r.path}')
+            print(f'TEXT: {r.text[:50]}')
+            print('-----------------------------------------------------------------')
 
         else:
             print('No query parameters passed')
