@@ -142,6 +142,34 @@ def doc_count(client, index):
     """
     return int(CatClient(client).count(index=[index], format='json')[0]['count'])
 
+def convertir_dic(weights)
+    dic = {}
+    for (word, weight) in weights:
+        dic[word]=weight
+    return dic
+
+def query_a_diccionari(query)
+    dic = {}
+    for i in query
+        if '^' in i:
+            word, value = i.split('^')
+            dict[word] = int(value)
+        else
+            dic[i] = 1
+    return dic
+
+def rocchio(query, docs, index, alpha, beta, R):
+    d = []
+    for f in docs:
+        d.append(convertir_dic(toTFIDF(client, index, f.meta.id)))
+    sumd = d[0]
+    for dic in d[1:]:
+        sumd = dict(sumd.items() + dic.items() +
+        [(k, sumd[k] + dic[k]) for k in set(dic) & set(sumd)])
+    sumd = heapq.nlargest(R, sumd.items(), key=lambda i: i[1])
+    sumd = beta*sumd/len(docs)
+    newQuery = alpha*query
+    return dict(newQuery.items() + sumd.items() + [(k, newQuery[k] + sumd[k]) for k in set(newQuery) & set(sumd)])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -155,6 +183,9 @@ if __name__ == '__main__':
     print(query)
     nhits = 5
     nrounds = 5
+    alpha = 1
+    beta = 1
+    R = 10
 
     try:
         client = Elasticsearch()
@@ -167,7 +198,7 @@ if __name__ == '__main__':
 
                 s = s.query(q)
                 response = s[0:nhits].execute()
-                query = rocchio(response, index)
+                query = rocchio(query_a_diccionari(query),response, index, aplha, beta, R)
         for r in response:  # only returns a specific number of results
             print(f'ID= {r.meta.id} SCORE={r.meta.score}')
             print(f'PATH= {r.path}')
