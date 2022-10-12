@@ -1,9 +1,9 @@
-
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.client import CatClient
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Q
+import heapq
 
 import argparse
 
@@ -14,7 +14,6 @@ __author__ = 'bejar'
 def search_file_by_path(client, index, path):
     """
     Search for a file using its path
-
     :param path:
     :return:
     """
@@ -35,7 +34,6 @@ def document_term_vector(client, index, id):
     Returns the term vector of a document and its statistics a two sorted list of pairs (word, count)
     The first one is the frequency of the term in the document, the second one is the number of documents
     that contain the term
-
     :param client:
     :param index:
     :param id:
@@ -56,7 +54,6 @@ def document_term_vector(client, index, id):
 def toTFIDF(client, index, file_id):
     """
     Returns the term weights of a document
-
     :param file:
     :return:
     """
@@ -135,28 +132,33 @@ def cosine_similarity(tw1, tw2):
 def doc_count(client, index):
     """
     Returns the number of documents in an index
-
     :param client:
     :param index:
     :return:
     """
     return int(CatClient(client).count(index=[index], format='json')[0]['count'])
 
-def convertir_dic(weights)
+def convertir_dic(weights):
     dic = {}
     for (word, weight) in weights:
         dic[word]=weight
     return dic
 
-def query_a_diccionari(query)
+def query_a_diccionari(query):
     dic = {}
-    for i in query
+    for i in query:
         if '^' in i:
             word, value = i.split('^')
             dict[word] = int(value)
-        else
+        else:
             dic[i] = 1
     return dic
+
+def diccionari_a_query(dic):
+    query = []
+    for i in set(dic):
+        query.append(i + "^" + str(dic[i]))
+    return query
 
 def rocchio(query, docs, index, alpha, beta, R):
     d = []
@@ -164,12 +166,12 @@ def rocchio(query, docs, index, alpha, beta, R):
         d.append(convertir_dic(toTFIDF(client, index, f.meta.id)))
     sumd = d[0]
     for dic in d[1:]:
-        sumd = dict(sumd.items() + dic.items() +
-        [(k, sumd[k] + dic[k]) for k in set(dic) & set(sumd)])
+        sumd = {x: sumd.get(x, 0) + dic.get(x, 0) for x in set(sumd).union(dic)}
     sumd = heapq.nlargest(R, sumd.items(), key=lambda i: i[1])
-    sumd = beta*sumd/len(docs)
-    newQuery = alpha*query
-    return dict(newQuery.items() + sumd.items() + [(k, newQuery[k] + sumd[k]) for k in set(newQuery) & set(sumd)])
+    k = len(docs)
+    sumd = {x: beta*y/k for (x,y) in sumd}
+    newQuery = {x: alpha*query.get(x, 0) for x in set(query)}
+    return diccionari_a_query({x: sumd.get(x, 0) + newQuery.get(x, 0) for x in set(sumd).union(newQuery)})
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -186,19 +188,30 @@ if __name__ == '__main__':
     alpha = 1
     beta = 1
     R = 10
-
+    #if query is None:
+    #    raise Exception("Insereix Query")
     try:
         client = Elasticsearch()
         s = Search(using=client, index=index)
-        for i in range(0,nrounds):
-            if query is not None:
-                q = Q('query_string',query=query[0])
-                for i in range(1, len(query)):
-                    q &= Q('query_string',query=query[i])
 
-                s = s.query(q)
-                response = s[0:nhits].execute()
-                query = rocchio(query_a_diccionari(query),response, index, aplha, beta, R)
+        for i in range(1,nrounds):
+            print(i)
+            print(query)
+            q = Q('query_string',query=query[0])
+            for i in range(1, len(query)):
+                q &= Q('query_string',query=query[i])
+
+            s = s.query(q)
+            response = s[0:nhits].execute()
+            query = rocchio(query_a_diccionari(query),response, index, alpha, beta, R)
+
+        # Last Query
+        q = Q('query_string',query=query[0])
+        for i in range(1, len(query)):
+            q &= Q('query_string',query=query[i])
+
+        s = s.query(q)
+        response = s[0:nhits].execute()
         for r in response:  # only returns a specific number of results
             print(f'ID= {r.meta.id} SCORE={r.meta.score}')
             print(f'PATH= {r.path}')
