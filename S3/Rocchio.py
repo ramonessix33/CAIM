@@ -181,11 +181,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--index', default=None, help='Index to search')
     parser.add_argument('--query', default=None, nargs=argparse.REMAINDER, help='List of words to search')
-    parser.add_argument('--nhits', default=None, help='List of words to search')
-    parser.add_argument('--nrounds', default=None, help='List of words to search')
-    parser.add_argument('--alpha', default=None, help='List of words to search')
-    parser.add_argument('--beta', default=None, help='List of words to search')
-    parser.add_argument('--R', default=None, help='List of words to search')
+    parser.add_argument('--nhits', default=None, help='Maximum number of focuments searched')
+    parser.add_argument('--nrounds', default=None, help='Number of times Rocchio is to be executed')
+    parser.add_argument('--alpha', default=None, help='Parameter of importance of last query')
+    parser.add_argument('--beta', default=None, help='Parameter of importance of frequent words in response')
+    parser.add_argument('--R', default=None, help='Maximum number of important words in response')
 
     args = parser.parse_args()
 
