@@ -149,7 +149,7 @@ def query_a_diccionari(query):
     for i in query:
         if '^' in i:
             word, value = i.split('^')
-            dict[word] = int(value)
+            dic[word] = float(value)
         else:
             dic[i] = 1
     return dic
@@ -161,6 +161,10 @@ def diccionari_a_query(dic):
     return query
 
 def rocchio(query, docs, index, alpha, beta, R):
+    print("Documents trobats "+ str(len(docs)))
+    if len(docs) == 0:
+        return query
+    query = query_a_diccionari(query)
     d = []
     for f in docs:
         d.append(convertir_dic(toTFIDF(client, index, f.meta.id)))
@@ -177,22 +181,28 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--index', default=None, help='Index to search')
     parser.add_argument('--query', default=None, nargs=argparse.REMAINDER, help='List of words to search')
+    parser.add_argument('--nhits', default=None, help='List of words to search')
+    parser.add_argument('--nrounds', default=None, help='List of words to search')
+    parser.add_argument('--alpha', default=None, help='List of words to search')
+    parser.add_argument('--beta', default=None, help='List of words to search')
+    parser.add_argument('--R', default=None, help='List of words to search')
 
     args = parser.parse_args()
 
     index = args.index
     query = args.query
     print(query)
-    nhits = 5
-    nrounds = 5
-    alpha = 1
-    beta = 1
-    R = 10
+    nhits = int(args.nhits)
+    nrounds = int(args.nrounds)
+    alpha = float(args.alpha)
+    beta = float(args.beta)
+    R = int(args.R)
     #if query is None:
     #    raise Exception("Insereix Query")
     try:
         client = Elasticsearch()
         s = Search(using=client, index=index)
+
 
         for i in range(1,nrounds):
             print(i)
@@ -203,7 +213,7 @@ if __name__ == '__main__':
 
             s = s.query(q)
             response = s[0:nhits].execute()
-            query = rocchio(query_a_diccionari(query),response, index, alpha, beta, R)
+            query = rocchio(query,response, index, alpha, beta, R)
 
         # Last Query
         q = Q('query_string',query=query[0])
@@ -218,10 +228,8 @@ if __name__ == '__main__':
             print(f'TEXT: {r.text[:50]}')
             print('-----------------------------------------------------------------')
 
-        else:
-            print('No query parameters passed')
-
         print (f"{response.hits.total['value']} Documents")
 
+        print ("Best query: ", query)
     except NotFoundError:
         print(f'Index {index} does not exists')
