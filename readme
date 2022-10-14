@@ -1,2 +1,1 @@
 feina
- {x: A.get(x, 0) + B.get(x, 0) for x in set(A).union(B)}
