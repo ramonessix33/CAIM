@@ -35,7 +35,7 @@ p = []
 
 def readAirports(fd):
     print("Reading Airport file from {0}".format(fd))
-    airportsTxt = open(fd, "r");
+    airportsTxt = open(fd, "r", encoding="utf-8");
     cont = 0
     for line in airportsTxt.readlines():
         a = Airport()
@@ -121,9 +121,8 @@ def outputPageRanks():
     print("Suma de la llista: " + str(sum(p)))
 
 def main(argv=None):
-    readAirports("airports1.txt")
-    readRoutes("routes1.txt")
-    Lambdas = [0.3,0.5,0.8,0.81,0.83,0.85,0.87,0.9]
+    readAirports("airports.txt")
+    readRoutes("routes.txt")
     l = 0.1
     Ls = []
     Its = []
@@ -138,8 +137,8 @@ def main(argv=None):
         Its.append(iterations)
         l+=0.05
     plt.plot(Ls, Its)
-    plt.title("Iteracions per Valor d'L")
-    plt.xlabel('L')
+    plt.title("Iteracions per Valor del Damping factor")
+    plt.xlabel('Damping factor')
     plt.ylabel('Iteracions')
     plt.show()
 
