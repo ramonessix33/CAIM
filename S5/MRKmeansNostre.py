@@ -69,28 +69,31 @@ if __name__ == '__main__':
             for key in new_assign:
                 auxString = key + ':'
                 for item in new_assign[key]:
-                    auxString = auxString + item + ' '
+                    auxString += item + ' '
                 newAssignFile.write(auxString + '\n')
             newAssignFile.close()
             # If you have saved the assignments, you can check if they have changed from the previous iteration
 
-        print(f"Time= {(time.time() - tinit)} seconds")
+            f = open('prototypes%d.txt' % (i + 1), 'w')
+            for j, d in new_proto.items():
+                docvec = ''
+                for v in d.split():
+                    docvec += (v+'+1.0 ')
+                f.write('CLASS'+str(j) + ':' + docvec.encode('ascii','replace').decode() + '\n')
+            f.close()    
 
-        nomove = True
+            print (new_assign)
+            print (assign)
 
-        if new_assign==assign:
-            nomove = True
+            if new_assign == assign:
+                nomove = True
             assign = new_assign
 
+        print(f"Time= {(time.time() - tinit)} seconds")
+            
         if nomove:  # If there is no changes in two consecutive iteration we can stop
             print("Algorithm converged")
             break
-        f = open('prototypes%d.txt' % (i + 1), 'w')
-        for j, d in new_proto.items():
-            docvec = ''
-            for v in d.split():
-                docvec += (v+'+1.0 ')
-            f.write('CLASS'+str(j) + ':' + docvec.encode('ascii','replace').decode() + '\n')
-        f.close()
+        
 
     # Now the last prototype file should have the results

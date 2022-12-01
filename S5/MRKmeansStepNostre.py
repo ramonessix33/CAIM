@@ -35,9 +35,10 @@ class MRKmeansStep(MRJob):
 
         The result should be always a value in the range [0,1]
         """
-
-        i, j, prod = 0
-        while i < len(prot) and i < len(doc):
+        prod = 0
+        i = 0
+        j = 0
+        while i < len(prot) and j < len(doc):
             if prot[i][0] < doc[j]:
                 i += 1
             elif prot[i][0] > doc[j]:

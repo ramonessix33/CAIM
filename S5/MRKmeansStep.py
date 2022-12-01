@@ -27,11 +27,28 @@ class MRKmeansStep(MRJob):
 		Words must be alphabeticaly ordered
 		The result should be always a value in the range [0,1]
 		"""
+		prod = 0
+		i = 0
+		j = 0
+		while i < len(prot) and j < len(doc):
+			if prot[i][0] < doc[j]:
+				i += 1
+			elif prot[i][0] > doc[j]:
+				j += 1
+			else:
+				prod += prot[i][1]
+				i += 1
+				j += 1
 
-		intersecSize = sum(1 for elem in prot if elem[0] in doc)
-		unionSize = len(prot) + len(doc)
+										
+		maxim = max([y for x, y in prot])
+		prod_norm = [y/maxim for x, y in prot]
+		norm1 = sum([x*x for x in prod_norm])
+		norm2 = len(doc)
 
-		return intersecSize / float(unionSize - intersecSize)
+		ret = prod/(norm1 + norm2 - prod)
+
+		return ret
 		
 	def configure_args(self):
 		"""
@@ -62,27 +79,19 @@ class MRKmeansStep(MRJob):
 		You can add also more elements to the value element, for example the document_id
 		"""
 
-		# Each line is a string docid:wor1 word2 ... wordn
 		_, doc, words = line.split(':')
 		lwords = words.split()
 
-		#
-		# Compute map here
-		# 
-		closestDistance = -1
-		closestClust = "ErrorIfSame"
+		min = -1
+		id = 0
+		for idProt, prot in self.prototypes.items():
+			distancia = self.jaccard(prot, lwords)
+			if distancia > min:
+				min = distancia
+				id = idProt
 
-		for currCluster in self.prototypes:
-			
-			auxDist = self.jaccard(self.prototypes[currCluster], lwords)
-			
-			if (closestDistance < 0) or (auxDist < closestDistance):
-				
-				closestClust = currCluster
-				closestDistance = auxDist
-
-		# Return pair key, value
-		yield closestClust, (doc, lwords)
+				# Return pair key, value
+				yield id, (doc, lwords)
 
 	def aggregate_prototype(self, key, values):
 		"""
@@ -98,36 +107,21 @@ class MRKmeansStep(MRJob):
 		:param values:
 		:return:
 		"""
-		# clustID, [(docIDx,wordsListx)] -> s'han unit tots els value que tenen el mateix clust/proto
-		wordsInCluster = {}
-		documentsInCluster = []
-		totalDocumentsInCluster = 0
-
-		# Calcular frequencia de cada paraula i nombre total de documents associats a un cluster
-		for pair in values:
-			totalDocumentsInCluster += 1
-			documentsInCluster.append(pair[0])
-			for word in pair[1]:
-				if not word in wordsInCluster:
-					wordsInCluster[word] = 1
+		frequencies = {}
+		ids = []
+		ndocs = 0
+		for idDoc, doc in values:
+			ndocs += 1
+			ids.append(idDoc)
+			for word in doc:
+				if word not in frequencies:
+					frequencies[word] = 1
 				else:
-					wordsInCluster[word] += 1
+					frequencies[word] +=1
 
-		# Generar llista amb les paraules i el seu pes
-		wordsWithWeight = []                    
-		for word, freq in wordsInCluster.items():
-			weight = float(freq/totalDocumentsInCluster)
-			wordsWithWeight.append((word,weight))
-		
-		
-		# Ordenar llista alfabeticament perque el dict no esta ordenat
-		# Funcio lambda que donat un element retorna el primer element
-		takeFirst = lambda pair: pair[0]
-		wordsWithWeight = sorted(wordsWithWeight, key= takeFirst)
-		documentsInCluster = sorted(documentsInCluster)
-
-		# key/clustID, 
-		yield key, (documentsInCluster,wordsWithWeight)
+		for f in frequencies:
+			frequencies[f] /= ndocs
+		yield key, (sorted(ids), sorted(frequencies.items(), key=lambda x: x[0]))
 
 	def steps(self):
 		return [MRStep(mapper_init=self.load_data, mapper=self.assign_prototype,
