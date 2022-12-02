@@ -22,7 +22,6 @@ from elasticsearch.helpers import scan
 from elasticsearch.exceptions import NotFoundError
 
 import argparse
-import os
 
 __author__ = 'bejar'
 
@@ -32,7 +31,6 @@ if __name__ == '__main__':
     parser.add_argument('--minfreq', default=0.0, type=float, required=False, help='Minimum word frequency')
     parser.add_argument('--maxfreq', default=1.0, type=float, required=False, help='Maximum word frequency')
     parser.add_argument('--numwords', default=None, type=int, required=False, help='Number of words')
- 
 
     args = parser.parse_args()
 
@@ -80,8 +78,7 @@ if __name__ == '__main__':
             docterms[doc] = docterms[doc].intersection(lwords)
 
         print('Saving data ...')
-        txt_name = os.path.join(r"C:\Users\paubc\OneDrive\Escritorio\UNI\Q7\CAIM\CAIM\S5\output_script",'vocabulary_Min_' + str(minfreq) + '_Max_' + str(maxfreq) + '.txt')
-        f = open(txt_name, 'w')
+        f = open('vocabulary.txt', 'w')
         for p in sorted(lwords):
             f.write(p.encode('ascii', 'replace').decode() + ' ' + str(voc[p]) + '\n')
         f.flush()

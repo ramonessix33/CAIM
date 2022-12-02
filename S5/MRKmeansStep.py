@@ -27,28 +27,26 @@ class MRKmeansStep(MRJob):
 		Words must be alphabeticaly ordered
 		The result should be always a value in the range [0,1]
 		"""
-		prod = 0
+
+		intersec = 0
 		i = 0
 		j = 0
-		while i < len(prot) and j < len(doc):
+		while (i < len(prot)) and (j < len(doc)):
 			if prot[i][0] < doc[j]:
 				i += 1
-			elif prot[i][0] > doc[j]:
+			elif doc[j] < prot[i][0]:
 				j += 1
 			else:
-				prod += prot[i][1]
+				intersec += prot[i][1]
 				i += 1
 				j += 1
+		
+		union = len(doc)
+		for i in range(len(prot)):
+			union += prot[i][1]**2
 
-										
-		maxim = max([y for x, y in prot])
-		prod_norm = [y/maxim for x, y in prot]
-		norm1 = sum([x*x for x in prod_norm])
-		norm2 = len(doc)
+		return float(intersec)/float(union - intersec)
 
-		ret = prod/(norm1 + norm2 - prod)
-
-		return ret
 		
 	def configure_args(self):
 		"""
@@ -91,7 +89,7 @@ class MRKmeansStep(MRJob):
 				id = idProt
 
 				# Return pair key, value
-				yield id, (doc, lwords)
+		yield id, (doc, lwords)
 
 	def aggregate_prototype(self, key, values):
 		"""
