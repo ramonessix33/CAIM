@@ -16,5 +16,6 @@ modularity(wc)
 membership(wc)
 plot(g, vertex.color=membership(wc))
 
-2. Now, use a community detection algorithm of your choice from the list provided. How many nodes does the
-largest community found contain? Plot the histogram of community sizes. Plot the graph with its communities.
+hist(membership(wc))
+
+     
